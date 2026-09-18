@@ -30,8 +30,8 @@ app.get('/', (req, res) => {
  * }
  */
 
-app.get("/list-files", async (req, res) => {
 
+app.get("/list-files", async (req, res) => {
 
     const listFiles = async (dir, baseDir) => {
         const entries = await fs.promises.readdir(dir, { withFileTypes: true });
@@ -42,7 +42,7 @@ app.get("/list-files", async (req, res) => {
             const relativePath = path.relative(baseDir, fullPath);
 
             // Exclude certain directories
-            if (entry.isDirectory() && ['node_modules', '.git', 'dist'].includes(entry.name)) {
+            if (entry.isDirectory() && [ 'node_modules', '.git', 'dist' ].includes(entry.name)) {
                 continue;
             }
 
@@ -70,6 +70,7 @@ app.get("/list-files", async (req, res) => {
     }
 
 })
+
 
 
 /**

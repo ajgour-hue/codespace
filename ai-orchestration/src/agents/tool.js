@@ -6,6 +6,11 @@ import { write } from 'fs';
 
 dotenv.config();
 
+ const SANDBOX_ID = "sandbox-1";
+
+const AGENT_URL =
+    `http://sandbox-service-${SANDBOX_ID}:3000`;
+
 
 export const listFiles = tool(
 

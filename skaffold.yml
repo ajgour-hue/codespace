@@ -16,6 +16,14 @@ build:
       infer:
         - "src/**"
 
+  - image: auth
+    context: auth
+    docker:
+      dockerfile: dockerfile
+    sync:
+      infer:
+        - "src/**"
+
         
 
   - image: agent
@@ -47,4 +55,7 @@ manifests:
     - k8s/ingress.yml
     - k8s/router-deployment.yml
     - k8s/router-service.yml
+    - k8s/auth-deployment.yml
+    - k8s/auth-service.yml
+    # - k8s/rbac.yml
     # yaha rbac file misssing hain do it  manually.

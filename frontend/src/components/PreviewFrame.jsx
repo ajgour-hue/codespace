@@ -15,7 +15,7 @@ export default function PreviewFrame({ previewUrl }) {
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-3 shrink-0"
         style={{ height: '36px', background: '#0B0F17', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        
+
         {/* Traffic light dots */}
         <div className="flex items-center gap-1.5 mr-1">
           <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#ef4444', opacity: 0.7 }} />
@@ -47,8 +47,8 @@ export default function PreviewFrame({ previewUrl }) {
           onMouseLeave={e => e.currentTarget.style.color = '#64748B'}
           title="Refresh preview">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M23 4v6h-6M1 20v-6h6"/>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            <path d="M23 4v6h-6M1 20v-6h6" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
           </svg>
         </button>
 
@@ -60,9 +60,9 @@ export default function PreviewFrame({ previewUrl }) {
           onMouseLeave={e => e.currentTarget.style.color = '#64748B'}
           title="Open in new tab">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-            <polyline points="15 3 21 3 21 9"/>
-            <line x1="10" y1="14" x2="21" y2="3"/>
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
           </svg>
         </a>
       </div>
@@ -76,7 +76,14 @@ export default function PreviewFrame({ previewUrl }) {
           className="w-full h-full border-0"
           style={{ background: '#fff' }}
           title="Sandbox Preview"
-          onLoad={() => setLoading(false)}
+          onLoad={() => {
+            console.log(
+              '[PreviewFrame] iframe loaded:',
+              previewUrl,
+              new Date().toISOString()
+            );
+            setLoading(false);
+          }}
         />
       </div>
     </div>

@@ -23,11 +23,9 @@ const [sandbox, setSandbox] = useState(() => {
   return {
     sandboxId: savedSandboxId,
 
-    previewUrl:
-      `https://${savedSandboxId}.preview.localhost`,
+   previewUrl: `https://${savedSandboxId}.preview.cryboy.online`,
 
-    agentBase:
-      `/agent/${savedSandboxId}`,
+   agentBase: `https://${savedSandboxId}.agent.cryboy.online`,
   }
 })
 
@@ -68,10 +66,9 @@ const handleSandboxCreated = useCallback((data) => {
 
     previewUrl:
       data.previewUrl ||
-      `https://${sandboxId}.preview.localhost`,
+      `https://${sandboxId}.preview.cryboy.online`,
 
-    agentBase:
-      `/agent/${sandboxId}`,
+   agentBase: `https://${sandboxId}.agent.cryboy.online`,
   })
 
   setStatus('ready')

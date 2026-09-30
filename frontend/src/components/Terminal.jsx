@@ -150,50 +150,18 @@ export default function Terminal({
         return
       }
 
-      const socketPath =
-        `${agentBase}/socket.io`
-
-      console.log(
-        'TERMINAL SOCKET PATH:',
-        socketPath
-      )
-
-      /*
-        Browser:
-
-        http://localhost:5173
-
-        Socket.IO:
-
-        /agent/<sandboxId>/socket.io
-
-        Vite proxy:
-
-        -> http://<sandboxId>.agent.localhost/socket.io
-      */
-
-      const socket = io(
-        window.location.origin,
-        {
-          path: socketPath,
-
-          // IMPORTANT:
-          // Start with polling, then upgrade
-          // to websocket.
-          transports: [
-            'polling',
-            'websocket',
-          ],
-
-          withCredentials: true,
-
-          reconnection: true,
-          reconnectionAttempts: 10,
-          reconnectionDelay: 1000,
-
-          timeout: 10000,
-        }
-      )
+      // Connect directly to this sandbox's agent domain.
+      // agentBase should be like:
+      // https://<sandboxId>.agent.cryboy.online
+      const socket = io(agentBase, {
+        path: '/socket.io/',
+        transports: ['websocket', 'polling'],
+        withCredentials: true,
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        timeout: 10000,
+      })
 
       socketRef.current = socket
 

@@ -26,9 +26,10 @@ app.use(express.urlencoded({ extended: true }));
 
 const io = new Server(httpServer, {
     cors: {
-        origin: "*",
-        methods: [ "GET", "POST", "PATCH" ],
-    }
+        origin: "https://codespace-rust.vercel.app",
+        methods: ["GET", "POST"],
+        credentials: true,
+    },
 });
 
 

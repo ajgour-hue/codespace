@@ -155,7 +155,7 @@ export default function Terminal({
       // https://<sandboxId>.agent.cryboy.online
       const socket = io(agentBase, {
         path: '/socket.io/',
-        transports: ['websocket', 'polling'],
+        transports: ['polling'],
         withCredentials: true,
         reconnection: true,
         reconnectionAttempts: 10,

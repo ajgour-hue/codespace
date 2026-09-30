@@ -1,167 +1,518 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+} from 'react'
+
 import { Terminal as XTerm } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { io } from 'socket.io-client'
 
-export default function Terminal({ sandboxId }) {
+export default function Terminal({
+  sandboxId,
+  agentBase,
+}) {
   const containerRef = useRef(null)
   const termRef = useRef(null)
   const fitAddonRef = useRef(null)
   const socketRef = useRef(null)
-  const [connected, setConnected] = useState(false)
-  const [error, setError] = useState(null)
+  const inputDisposableRef = useRef(null)
+
+  const [connected, setConnected] =
+    useState(false)
+
+  const [error, setError] =
+    useState(null)
+
+  // =====================================================
+  // Initialize XTerm
+  // =====================================================
 
   const initTerminal = useCallback(() => {
-    if (!containerRef.current || termRef.current) return
+    if (
+      !containerRef.current ||
+      termRef.current
+    ) {
+      return null
+    }
 
     const term = new XTerm({
       theme: {
-        background: '#070b14',
-        foreground: '#e2e8f0',
-        cursor: '#22d3ee',
-        cursorAccent: '#070b14',
-        selectionBackground: 'rgba(34,211,238,0.2)',
-        black: '#1e2d45',
-        red: '#ef4444',
-        green: '#10b981',
-        yellow: '#f59e0b',
-        blue: '#3b82f6',
-        magenta: '#a78bfa',
-        cyan: '#22d3ee',
-        white: '#e2e8f0',
-        brightBlack: '#334155',
-        brightRed: '#f87171',
-        brightGreen: '#34d399',
-        brightYellow: '#fbbf24',
-        brightBlue: '#60a5fa',
-        brightMagenta: '#c4b5fd',
-        brightCyan: '#67e8f9',
-        brightWhite: '#f8fafc',
+        background: '#0B0F17',
+        foreground: '#E2E8F0',
+
+        cursor: '#8B5CF6',
+        cursorAccent: '#0B0F17',
+
+        selectionBackground:
+          'rgba(139,92,246,0.22)',
+
+        black: '#11161F',
+        red: '#EF4444',
+        green: '#22C55E',
+        yellow: '#F59E0B',
+        blue: '#3B82F6',
+        magenta: '#8B5CF6',
+        cyan: '#38BDF8',
+        white: '#E2E8F0',
+
+        brightBlack: '#475569',
+        brightRed: '#F87171',
+        brightGreen: '#4ADE80',
+        brightYellow: '#FBBF24',
+        brightBlue: '#60A5FA',
+        brightMagenta: '#A78BFA',
+        brightCyan: '#67E8F9',
+        brightWhite: '#F8FAFC',
       },
-      fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace',
-      fontSize: 13,
-      lineHeight: 1.5,
+
+      fontFamily:
+        '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace',
+
+      fontSize: 12,
+      lineHeight: 1.45,
+
       cursorBlink: true,
       cursorStyle: 'bar',
+
       scrollback: 5000,
+
       allowProposedApi: true,
+
+      convertEol: true,
     })
 
     const fitAddon = new FitAddon()
-    const webLinksAddon = new WebLinksAddon()
+    const webLinksAddon =
+      new WebLinksAddon()
+
     term.loadAddon(fitAddon)
     term.loadAddon(webLinksAddon)
+
     term.open(containerRef.current)
-    fitAddon.fit()
+
+    try {
+      fitAddon.fit()
+    } catch (err) {
+      console.error(
+        'Terminal fit error:',
+        err
+      )
+    }
 
     termRef.current = term
     fitAddonRef.current = fitAddon
 
-    term.writeln('\x1b[36m╔══════════════════════════════════════╗\x1b[0m')
-    term.writeln('\x1b[36m║   \x1b[1mSandbox Terminal\x1b[0m\x1b[36m                  ║\x1b[0m')
-    term.writeln('\x1b[36m╚══════════════════════════════════════╝\x1b[0m')
+    // Initial terminal screen
+
+    term.writeln(
+      '\x1b[36m╭────────────────────────────────────────────╮\x1b[0m'
+    )
+
+    term.writeln(
+      '\x1b[36m│  \x1b[1;37mSandbox Terminal\x1b[0m\x1b[36m                         │\x1b[0m'
+    )
+
+    term.writeln(
+      '\x1b[36m╰────────────────────────────────────────────╯\x1b[0m'
+    )
+
     term.writeln('')
-    term.writeln('\x1b[33mConnecting to sandbox...\x1b[0m')
+
+    term.writeln(
+      '\x1b[90mConnecting to sandbox...\x1b[0m'
+    )
 
     return term
   }, [])
 
-  const connectSocket = useCallback((term) => {
-    if (!sandboxId || !term) return
+  // =====================================================
+  // Connect Socket.IO
+  // =====================================================
 
-    const agentHost = `https://${sandboxId}.agent.cryboy.in`
+  const connectSocket = useCallback(
+    (term) => {
+      if (
+        !sandboxId ||
+        !agentBase ||
+        !term
+      ) {
+        console.error(
+          'Terminal: missing sandboxId or agentBase',
+          {
+            sandboxId,
+            agentBase,
+          }
+        )
 
-    try {
-      const socket = io(agentHost, {
-        transports: ['websocket', 'polling'],
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-      })
+        return
+      }
+
+      const socketPath =
+        `${agentBase}/socket.io`
+
+      console.log(
+        'TERMINAL SOCKET PATH:',
+        socketPath
+      )
+
+      /*
+        Browser:
+
+        http://localhost:5173
+
+        Socket.IO:
+
+        /agent/<sandboxId>/socket.io
+
+        Vite proxy:
+
+        -> http://<sandboxId>.agent.localhost/socket.io
+      */
+
+      const socket = io(
+        window.location.origin,
+        {
+          path: socketPath,
+
+          // IMPORTANT:
+          // Start with polling, then upgrade
+          // to websocket.
+          transports: [
+            'polling',
+            'websocket',
+          ],
+
+          withCredentials: true,
+
+          reconnection: true,
+          reconnectionAttempts: 10,
+          reconnectionDelay: 1000,
+
+          timeout: 10000,
+        }
+      )
 
       socketRef.current = socket
 
+      // =================================================
+      // CONNECTED
+      // =================================================
+
       socket.on('connect', () => {
+        console.log(
+          'TERMINAL SOCKET CONNECTED:',
+          socket.id
+        )
+
         setConnected(true)
         setError(null)
-        term.writeln('\x1b[32m✓ Connected to sandbox shell\x1b[0m')
+
+        term.writeln(
+          '\r\n\x1b[32m✓ Connected to sandbox shell\x1b[0m'
+        )
+
         term.writeln('')
       })
 
-      socket.on('disconnect', () => {
-        setConnected(false)
-        term.writeln('\r\n\x1b[33m⚠ Disconnected. Reconnecting...\x1b[0m')
-      })
+      // =================================================
+      // DISCONNECTED
+      // =================================================
 
-      socket.on('connect_error', (err) => {
-        setConnected(false)
-        setError('Connection failed')
-        term.writeln(`\r\n\x1b[31m✗ Connection error: ${err.message}\x1b[0m`)
-      })
+      socket.on(
+        'disconnect',
+        (reason) => {
+          console.log(
+            'TERMINAL SOCKET DISCONNECTED:',
+            reason
+          )
 
-      socket.on('terminal-output', (data) => {
-        term.write(data)
-      })
+          setConnected(false)
 
-      term.onData((data) => {
-        socket.emit('terminal-input', data)
-      })
+          if (
+            reason !==
+            'io client disconnect'
+          ) {
+            term.writeln(
+              '\r\n\x1b[33m⚠ Connection lost. Reconnecting...\x1b[0m'
+            )
+          }
+        }
+      )
 
-    } catch (err) {
-      setError(err.message)
-    }
-  }, [sandboxId])
+      // =================================================
+      // CONNECTION ERROR
+      // =================================================
+
+      socket.on(
+        'connect_error',
+        (err) => {
+          console.error(
+            'TERMINAL SOCKET ERROR:',
+            err
+          )
+
+          setConnected(false)
+
+          setError(
+            err.message ||
+            'Connection failed'
+          )
+
+          term.writeln(
+            `\r\n\x1b[31m✗ Connection error: ${err.message}\x1b[0m`
+          )
+        }
+      )
+
+      // =================================================
+      // TERMINAL OUTPUT
+      // =================================================
+
+      socket.on(
+        'terminal-output',
+        (data) => {
+          if (termRef.current) {
+            termRef.current.write(data)
+          }
+        }
+      )
+
+      // =================================================
+      // TERMINAL INPUT
+      // =================================================
+
+      inputDisposableRef.current =
+        term.onData((data) => {
+          if (
+            socket.connected
+          ) {
+            socket.emit(
+              'terminal-input',
+              data
+            )
+          }
+        })
+    },
+    [sandboxId, agentBase]
+  )
+
+  // =====================================================
+  // Initialize + Connect
+  // =====================================================
 
   useEffect(() => {
     const term = initTerminal()
-    if (term) connectSocket(term)
+
+    if (term) {
+      connectSocket(term)
+    }
 
     return () => {
-      if (socketRef.current) { socketRef.current.disconnect(); socketRef.current = null }
-      if (termRef.current) { termRef.current.dispose(); termRef.current = null }
-    }
-  }, [initTerminal, connectSocket])
+      // Remove terminal input listener
 
-  // Handle resize
-  useEffect(() => {
-    const observer = new ResizeObserver(() => {
-      if (fitAddonRef.current) {
-        try { fitAddonRef.current.fit() } catch (_) {}
+      if (
+        inputDisposableRef.current
+      ) {
+        inputDisposableRef.current.dispose()
+        inputDisposableRef.current = null
       }
-    })
-    if (containerRef.current) observer.observe(containerRef.current)
-    return () => observer.disconnect()
+
+      // Disconnect socket
+
+      if (socketRef.current) {
+        socketRef.current.disconnect()
+        socketRef.current = null
+      }
+
+      // Dispose terminal
+
+      if (termRef.current) {
+        termRef.current.dispose()
+        termRef.current = null
+      }
+
+      fitAddonRef.current = null
+
+      setConnected(false)
+    }
+  }, [
+    initTerminal,
+    connectSocket,
+  ])
+
+  // =====================================================
+  // Resize
+  // =====================================================
+
+  useEffect(() => {
+    if (!containerRef.current) {
+      return
+    }
+
+    const observer =
+      new ResizeObserver(() => {
+        if (fitAddonRef.current) {
+          try {
+            fitAddonRef.current.fit()
+          } catch (err) {
+            console.error(
+              'Terminal resize error:',
+              err
+            )
+          }
+        }
+      })
+
+    observer.observe(
+      containerRef.current
+    )
+
+    return () => {
+      observer.disconnect()
+    }
   }, [])
 
-  return (
-    <div className="flex flex-col h-full"
-      style={{ background: '#070b14' }}>
+  // =====================================================
+  // UI
+  // =====================================================
 
-      {/* Terminal toolbar */}
-      <div className="flex items-center justify-between px-3 shrink-0"
-        style={{ height: '32px', background: '#0d1424', borderBottom: '1px solid #1e2d45' }}>
+  return (
+    <div
+      className="flex flex-col h-full"
+      style={{
+        background: '#0B0F17',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+      }}
+    >
+      {/* ================================================
+          TERMINAL HEADER
+      ================================================= */}
+
+      <div
+        className="flex items-center justify-between shrink-0"
+        style={{
+          height: '40px',
+          padding: '0 14px',
+
+          background: '#0D1118',
+
+          borderBottom:
+            '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
+        {/* Left */}
+
         <div className="flex items-center gap-2">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
-            <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
-          </svg>
-          <span className="text-xs font-medium" style={{ color: '#475569' }}>Terminal</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {error && (
-            <span className="text-xs" style={{ color: '#ef4444' }}>{error}</span>
+          <div
+            className="flex items-center justify-center rounded-md"
+            style={{
+              width: '24px',
+              height: '24px',
+
+              background:
+                'rgba(139,92,246,0.10)',
+
+              color: '#A78BFA',
+
+              fontFamily:
+                'monospace',
+
+              fontSize: '12px',
+
+              border:
+                '1px solid rgba(139,92,246,0.16)',
+            }}
+          >
+            &gt;_
+          </div>
+
+          <span
+            className="text-[11px] font-semibold tracking-wider"
+            style={{
+              color: '#94A3B8',
+            }}
+          >
+            TERMINAL
+          </span>
+
+          {sandboxId && (
+            <span
+              className="text-[9px] font-mono"
+              style={{
+                color: '#64748B',
+              }}
+            >
+              {sandboxId.slice(0, 8)}
+            </span>
           )}
-          <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full"
-              style={{ background: connected ? '#10b981' : '#ef4444', boxShadow: `0 0 6px ${connected ? '#10b981' : '#ef4444'}` }} />
-            <span className="text-xs" style={{ color: '#475569' }}>
-              {connected ? 'Connected' : 'Disconnected'}
+        </div>
+
+        {/* Right */}
+
+        <div className="flex items-center gap-3">
+          {error && (
+            <span
+              className="text-[10px] max-w-[220px] truncate"
+              style={{
+                color: '#f87171',
+              }}
+              title={error}
+            >
+              {error}
+            </span>
+          )}
+
+          <div
+            className="flex items-center gap-1.5 px-2 py-1 rounded-md"
+            style={{
+              color: connected
+                ? '#22C55E'
+                : '#64748B',
+              background: connected
+                ? 'rgba(34,197,94,0.06)'
+                : 'rgba(100,116,139,0.06)',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{
+                background:
+                  connected
+                    ? '#22c55e'
+                    : '#475569',
+
+                boxShadow:
+                  connected
+                    ? '0 0 8px rgba(34,197,94,.7)'
+                    : 'none',
+              }}
+            />
+
+            <span className="text-[10px]">
+              {connected
+                ? 'Connected'
+                : 'Connecting'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* xterm container */}
-      <div ref={containerRef} className="flex-1 overflow-hidden" />
+      {/* ================================================
+          TERMINAL BODY
+      ================================================= */}
+
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-hidden"
+        style={{
+          padding: '8px 10px',
+          background: '#0B0F17',
+        }}
+      />
     </div>
   )
 }

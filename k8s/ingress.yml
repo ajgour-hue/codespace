@@ -52,7 +52,7 @@ spec:
               number: 80
 
   
-  - host: "*.preview.localhost"
+  - host: "*.preview.cryboy.online"
     http:
       paths:
       - pathType: Prefix
@@ -63,7 +63,7 @@ spec:
             port: 
               number: 80
 
-  - host: "*.agent.localhost"
+  - host: "*.agent.cryboy.online"
     http:
       paths:
       - pathType: Prefix

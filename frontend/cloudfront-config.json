@@ -1,0 +1,36 @@
+{
+  "CallerReference": "cryboy-online-frontend-1",
+  "Origins": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "Id": "S3-cryboy-online-frontend",
+        "DomainName": "cryboy-online-frontend.s3-website-ap-southeast-2.amazonaws.com",
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "http-only"
+        }
+      }
+    ]
+  },
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "S3-cryboy-online-frontend",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+    "Compress": true
+  },
+  "Aliases": {
+    "Quantity": 1,
+    "Items": ["www.cryboy.online"]
+  },
+  "ViewerCertificate": {
+    "ACMCertificateArn": "arn:aws:acm:us-east-1:183004894687:certificate/5555e41f-14b8-4b3d-bf8d-a450a05a8f4f",
+    "SSLSupportMethod": "sni-only",
+    "MinimumProtocolVersion": "TLSv1.2_2021"
+  },
+  "Enabled": true,
+  "HttpVersion": "http2",
+  "DefaultRootObject": "index.html",
+  "Comment": "cryboy frontend"
+}

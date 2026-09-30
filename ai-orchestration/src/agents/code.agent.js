@@ -12,7 +12,7 @@ import { createAgent } from "langchain";
 
 const model = new ChatOpenRouter({
     model: "inclusionai/ling-3.0-flash-sante:free",
-    apiKey: "YOUR_LING_API_KEY",
+    apiKey: process.env.OPENAI_API_KEY,
     temperature: 0.7,
 });
 

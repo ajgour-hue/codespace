@@ -15,7 +15,7 @@ spec:
         app:  router
     spec:
       containers:
-      - image:  router
+      - image:  183004894687.dkr.ecr.ap-southeast-2.amazonaws.com/router
         name:  router-server
         resources:
           requests:
@@ -24,6 +24,14 @@ spec:
           limits:
             cpu: "500m"
             memory: "500M"
+
+        env:
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: database
+                key: REDIS_URL
+                
         livenessProbe:
           httpGet:
             path: /api/status/healthz
@@ -35,7 +43,10 @@ spec:
             path: /api/status/readyz
             port: 3000
           initialDelaySeconds: 30
-          timeoutSeconds: 10    
+          timeoutSeconds: 10   
+
+ 
+
         ports:
         - containerPort:  3000
           name:  my-name

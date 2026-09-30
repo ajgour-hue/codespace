@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
+
 import SplashScreen from './components/SplashScreen'
 import TopBar from './components/TopBar'
 import FileExplorer from './components/FileExplorer'
@@ -8,69 +9,174 @@ import Terminal from './components/Terminal'
 import AiChat from './components/AiChat'
 
 export default function App() {
+  // =====================================================
   // Sandbox state
-  const [sandbox, setSandbox] = useState(null) // { sandboxId, previewUrl, agentBase }
+  // =====================================================
+
+const [sandbox, setSandbox] = useState(() => {
+  const savedSandboxId = localStorage.getItem('sandboxId')
+
+  if (!savedSandboxId) {
+    return null
+  }
+
+  return {
+    sandboxId: savedSandboxId,
+
+    previewUrl:
+      `https://${savedSandboxId}.preview.localhost`,
+
+    agentBase:
+      `/agent/${savedSandboxId}`,
+  }
+})
+
   const [status, setStatus] = useState('ready')
 
+  // =====================================================
   // UI state
-  const [activeTab, setActiveTab] = useState('preview') // 'preview' | 'files'
+  // =====================================================
+
+  const [activeTab, setActiveTab] = useState('preview')
   const [activeFile, setActiveFile] = useState(null)
   const [fileRefreshKey, setFileRefreshKey] = useState(0)
 
+  // =====================================================
   // Terminal resize
+  // =====================================================
+
   const [terminalHeight, setTerminalHeight] = useState(220)
+
   const isDragging = useRef(false)
   const dragStartY = useRef(0)
   const dragStartH = useRef(0)
 
-  const handleSandboxCreated = useCallback((data) => {
-    const agentBase = `https://${data.sandboxId}.agent.cryboy.in`
-    setSandbox({ sandboxId: data.sandboxId, previewUrl: data.previewUrl, agentBase })
-    setStatus('ready')
-  }, [])
+  // =====================================================
+  // Sandbox created
+  // =====================================================
+
+const handleSandboxCreated = useCallback((data) => {
+  const sandboxId = data.sandboxId
+
+  localStorage.setItem(
+    'sandboxId',
+    sandboxId
+  )
+
+  setSandbox({
+    sandboxId,
+
+    previewUrl:
+      data.previewUrl ||
+      `https://${sandboxId}.preview.localhost`,
+
+    agentBase:
+      `/agent/${sandboxId}`,
+  })
+
+  setStatus('ready')
+}, [])
+
+  // =====================================================
+  // Files changed
+  // =====================================================
 
   const handleFilesChanged = useCallback(() => {
-    setFileRefreshKey(k => k + 1)
+    setFileRefreshKey((k) => k + 1)
   }, [])
+
+  // =====================================================
+  // File select
+  // =====================================================
 
   const handleFileSelect = useCallback((path) => {
     setActiveFile(path)
     setActiveTab('files')
   }, [])
 
-  // Drag to resize terminal
+  // =====================================================
+  // Drag terminal
+  // =====================================================
+
   const handleDragStart = (e) => {
     isDragging.current = true
     dragStartY.current = e.clientY
     dragStartH.current = terminalHeight
 
     const onMove = (ev) => {
-      if (!isDragging.current) return
+      if (!isDragging.current) {
+        return
+      }
+
       const delta = dragStartY.current - ev.clientY
-      const newH = Math.min(Math.max(dragStartH.current + delta, 80), 500)
+
+      const newH = Math.min(
+        Math.max(
+          dragStartH.current + delta,
+          80
+        ),
+        500
+      )
+
       setTerminalHeight(newH)
     }
+
     const onUp = () => {
       isDragging.current = false
-      document.removeEventListener('mousemove', onMove)
-      document.removeEventListener('mouseup', onUp)
+
+      document.removeEventListener(
+        'mousemove',
+        onMove
+      )
+
+      document.removeEventListener(
+        'mouseup',
+        onUp
+      )
     }
-    document.addEventListener('mousemove', onMove)
-    document.addEventListener('mouseup', onUp)
+
+    document.addEventListener(
+      'mousemove',
+      onMove
+    )
+
+    document.addEventListener(
+      'mouseup',
+      onUp
+    )
   }
 
-  // Landing / splash
+  // =====================================================
+  // Landing / Splash
+  // =====================================================
+
   if (!sandbox) {
-    return <SplashScreen onSandboxCreated={handleSandboxCreated} />
+    return (
+      <SplashScreen
+        onSandboxCreated={handleSandboxCreated}
+      />
+    )
   }
 
-  const { sandboxId, previewUrl, agentBase } = sandbox
+  const {
+    sandboxId,
+    previewUrl,
+    agentBase,
+  } = sandbox
+
+  // =====================================================
+  // Main UI
+  // =====================================================
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden"
-      style={{ background: '#070b14' }}>
+    <div
+      className="flex flex-col h-full w-full overflow-hidden"
+      style={{
+        background: '#070b14',
+      }}
+    >
+      {/* Top Bar */}
 
-      {/* Top bar */}
       <TopBar
         sandboxId={sandboxId}
         activeTab={activeTab}
@@ -79,9 +185,11 @@ export default function App() {
       />
 
       {/* Main layout */}
+
       <div className="flex flex-1 overflow-hidden">
 
-        {/* File Explorer sidebar */}
+        {/* File Explorer */}
+
         <FileExplorer
           agentBase={agentBase}
           activeFile={activeFile}
@@ -89,40 +197,79 @@ export default function App() {
           refreshKey={fileRefreshKey}
         />
 
-        {/* Center — main content + terminal */}
+        {/* Center */}
+
         <div className="flex flex-col flex-1 overflow-hidden">
 
-          {/* Main content area */}
+          {/* Main content */}
+
           <div className="flex-1 overflow-hidden">
+
             {activeTab === 'preview' ? (
-              <PreviewFrame previewUrl={previewUrl} />
+              <PreviewFrame
+                previewUrl={previewUrl}
+              />
             ) : (
-              <FileViewer agentBase={agentBase} filePath={activeFile} />
+              <FileViewer
+                agentBase={agentBase}
+                filePath={activeFile}
+              />
             )}
+
           </div>
 
           {/* Drag handle */}
+
           <div
             className="shrink-0 flex items-center justify-center cursor-row-resize select-none"
-            style={{ height: '6px', background: '#0d1424', borderTop: '1px solid #1e2d45', borderBottom: '1px solid #1e2d45', zIndex: 10 }}
+            style={{
+              height: '6px',
+              background: '#0d1424',
+              borderTop: '1px solid #1e2d45',
+              borderBottom: '1px solid #1e2d45',
+              zIndex: 10,
+            }}
             onMouseDown={handleDragStart}
-            title="Drag to resize terminal">
-            <div className="w-12 h-0.5 rounded-full" style={{ background: '#2a3f60' }} />
+            title="Drag to resize terminal"
+          >
+            <div
+              className="w-12 h-0.5 rounded-full"
+              style={{
+                background: '#2a3f60',
+              }}
+            />
           </div>
 
           {/* Terminal */}
-          <div className="shrink-0 overflow-hidden" style={{ height: `${terminalHeight}px` }}>
-            <Terminal sandboxId={sandboxId} />
+
+          <div
+            className="shrink-0 overflow-hidden"
+            style={{
+              height: `${terminalHeight}px`,
+            }}
+          >
+            <Terminal
+              sandboxId={sandboxId}
+              agentBase={agentBase}
+            />
           </div>
+
         </div>
 
-        {/* Right — AI Chat */}
-        <div className="shrink-0 overflow-hidden" style={{ width: '340px' }}>
+        {/* AI Chat */}
+
+        <div
+          className="shrink-0 overflow-hidden"
+          style={{
+            width: '340px',
+          }}
+        >
           <AiChat
             sandboxId={sandboxId}
             onFilesChanged={handleFilesChanged}
           />
         </div>
+
       </div>
     </div>
   )

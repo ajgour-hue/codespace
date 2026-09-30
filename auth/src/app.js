@@ -7,7 +7,6 @@ import morgan from "morgan";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cookieParser from "cookie-parser";
-
 import authRoutes from "./routes/auth.routes.js";
 
 const app = express();

@@ -23,11 +23,25 @@ build:
     sync:
       infer:
         - "src/**"
+  
+  - image: notification
+    context: notification
+    docker:
+      dockerfile: dockerfile  
+    sync:
+      infer:
+        - "src/**"
+
 
         
 
   - image: agent
     context: sandbox/agent
+    docker:
+      dockerfile: dockerfile
+
+  - image: sync-agent
+    context: sandbox/sync-agent
     docker:
       dockerfile: dockerfile
 
@@ -57,5 +71,7 @@ manifests:
     - k8s/router-service.yml
     - k8s/auth-deployment.yml
     - k8s/auth-service.yml
-    # - k8s/rbac.yml
-    # yaha rbac file misssing hain do it  manually.
+    - k8s/notification-deployment.yml
+    - k8s/notification-service.yml
+    - k8s/secrets.yml
+    - k8s/rbac.yml

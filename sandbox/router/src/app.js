@@ -2,6 +2,7 @@ import express from 'express';
 import morgan from 'morgan';
 import { createProxyMiddleware } from "http-proxy-middleware";
 import http from 'http';
+import { refreshTTL } from './config/redis.js';
 
 const app = express();
 app.use(morgan('combined'));
@@ -46,9 +47,12 @@ function getAgentProxy(sandboxId) {
     return agentProxies[sandboxId];
 }
 
-app.use((req, res, next) => {
+app.use( async(req, res, next) => {
     const host = req.headers.host;
     const sandboxId = host.split('.')[0]; // Extract sandboxId from subdomain
+
+
+    await refreshTTL(sandboxId);
 
     // pod1.agent.localhost 
     // pod2.preview.localhost

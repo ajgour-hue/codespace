@@ -86,7 +86,7 @@ authRouter.get(
         maxAge: 60 * 60 * 1000
       });
 
-      return res.redirect("http://localhost:5173");
+     return res.redirect("https://codespace-rust.vercel.app");
 
     } catch (err) {
       console.error("GOOGLE CALLBACK ERROR:", err);

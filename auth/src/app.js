@@ -21,7 +21,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/api/auth/google/callback"
+      callbackURL: "https://codespace-rust.vercel.app/api/auth/google/callback"
     },
     (accessToken, refreshToken, profile, done) => {
       return done(null, profile);

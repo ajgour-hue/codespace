@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback } from 'react'
 
 import SplashScreen from './components/SplashScreen'
@@ -13,21 +14,19 @@ export default function App() {
   // Sandbox state
   // =====================================================
 
-const [sandbox, setSandbox] = useState(() => {
-  const savedSandboxId = localStorage.getItem('sandboxId')
+  const [sandbox, setSandbox] = useState(() => {
+    const savedSandboxId = localStorage.getItem('sandboxId')
 
-  if (!savedSandboxId) {
-    return null
-  }
+    if (!savedSandboxId) {
+      return null
+    }
 
-  return {
-    sandboxId: savedSandboxId,
-
-   previewUrl: `https://${savedSandboxId}.preview.cryboy.online`,
-
-   agentBase: `https://${savedSandboxId}.agent.cryboy.online`,
-  }
-})
+    return {
+      sandboxId: savedSandboxId,
+      previewUrl: `https://${savedSandboxId}.preview.cryboy.online`,
+      agentBase: `https://${savedSandboxId}.agent.cryboy.online`,
+    }
+  })
 
   const [status, setStatus] = useState('ready')
 
@@ -53,26 +52,19 @@ const [sandbox, setSandbox] = useState(() => {
   // Sandbox created
   // =====================================================
 
-const handleSandboxCreated = useCallback((data) => {
-  const sandboxId = data.sandboxId
+  const handleSandboxCreated = useCallback((data) => {
+    const sandboxId = data.sandboxId
 
-  localStorage.setItem(
-    'sandboxId',
-    sandboxId
-  )
+    localStorage.setItem('sandboxId', sandboxId)
 
-  setSandbox({
-    sandboxId,
+    setSandbox({
+      sandboxId,
+      previewUrl: `https://${sandboxId}.preview.cryboy.online`,
+      agentBase: `https://${sandboxId}.agent.cryboy.online`,
+    })
 
-    previewUrl:
-      data.previewUrl ||
-      `https://${sandboxId}.preview.cryboy.online`,
-
-   agentBase: `https://${sandboxId}.agent.cryboy.online`,
-  })
-
-  setStatus('ready')
-}, [])
+    setStatus('ready')
+  }, [])
 
   // =====================================================
   // Files changed
@@ -101,17 +93,12 @@ const handleSandboxCreated = useCallback((data) => {
     dragStartH.current = terminalHeight
 
     const onMove = (ev) => {
-      if (!isDragging.current) {
-        return
-      }
+      if (!isDragging.current) return
 
       const delta = dragStartY.current - ev.clientY
 
       const newH = Math.min(
-        Math.max(
-          dragStartH.current + delta,
-          80
-        ),
+        Math.max(dragStartH.current + delta, 80),
         500
       )
 
@@ -121,26 +108,12 @@ const handleSandboxCreated = useCallback((data) => {
     const onUp = () => {
       isDragging.current = false
 
-      document.removeEventListener(
-        'mousemove',
-        onMove
-      )
-
-      document.removeEventListener(
-        'mouseup',
-        onUp
-      )
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
     }
 
-    document.addEventListener(
-      'mousemove',
-      onMove
-    )
-
-    document.addEventListener(
-      'mouseup',
-      onUp
-    )
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
   }
 
   // =====================================================
@@ -149,17 +122,11 @@ const handleSandboxCreated = useCallback((data) => {
 
   if (!sandbox) {
     return (
-      <SplashScreen
-        onSandboxCreated={handleSandboxCreated}
-      />
+      <SplashScreen onSandboxCreated={handleSandboxCreated} />
     )
   }
 
-  const {
-    sandboxId,
-    previewUrl,
-    agentBase,
-  } = sandbox
+  const { sandboxId, previewUrl, agentBase } = sandbox
 
   // =====================================================
   // Main UI
@@ -168,9 +135,7 @@ const handleSandboxCreated = useCallback((data) => {
   return (
     <div
       className="flex flex-col h-full w-full overflow-hidden"
-      style={{
-        background: '#070b14',
-      }}
+      style={{ background: '#070b14' }}
     >
       {/* Top Bar */}
 
@@ -184,7 +149,6 @@ const handleSandboxCreated = useCallback((data) => {
       {/* Main layout */}
 
       <div className="flex flex-1 overflow-hidden">
-
         {/* File Explorer */}
 
         <FileExplorer
@@ -197,22 +161,17 @@ const handleSandboxCreated = useCallback((data) => {
         {/* Center */}
 
         <div className="flex flex-col flex-1 overflow-hidden">
-
           {/* Main content */}
 
           <div className="flex-1 overflow-hidden">
-
             {activeTab === 'preview' ? (
-              <PreviewFrame
-                previewUrl={previewUrl}
-              />
+              <PreviewFrame previewUrl={previewUrl} />
             ) : (
               <FileViewer
                 agentBase={agentBase}
                 filePath={activeFile}
               />
             )}
-
           </div>
 
           {/* Drag handle */}
@@ -231,9 +190,7 @@ const handleSandboxCreated = useCallback((data) => {
           >
             <div
               className="w-12 h-0.5 rounded-full"
-              style={{
-                background: '#2a3f60',
-              }}
+              style={{ background: '#2a3f60' }}
             />
           </div>
 
@@ -241,32 +198,26 @@ const handleSandboxCreated = useCallback((data) => {
 
           <div
             className="shrink-0 overflow-hidden"
-            style={{
-              height: `${terminalHeight}px`,
-            }}
+            style={{ height: `${terminalHeight}px` }}
           >
             <Terminal
               sandboxId={sandboxId}
               agentBase={agentBase}
             />
           </div>
-
         </div>
 
         {/* AI Chat */}
 
         <div
           className="shrink-0 overflow-hidden"
-          style={{
-            width: '340px',
-          }}
+          style={{ width: '340px' }}
         >
           <AiChat
             sandboxId={sandboxId}
             onFilesChanged={handleFilesChanged}
           />
         </div>
-
       </div>
     </div>
   )

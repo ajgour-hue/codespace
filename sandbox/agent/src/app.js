@@ -6,12 +6,18 @@ import { Server } from "socket.io";
 import http from 'http';
 import pty from 'node-pty';
 import os from 'os';
+import cors from 'cors';
 
 const WORKING_DIR = '/workspace';
 
 const app = express();
 const httpServer = http.createServer(app);
 
+app.use(cors({
+  origin: 'https://codespace-rust.vercel.app',
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+}));
 
 app.use(morgan('dev'));
 app.use(express.json());
